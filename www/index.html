@@ -12,37 +12,108 @@
 
 <body>
 
-    <button onmouseover="fwd()" onmouseout="stop()">F</button>
-    <button onmouseover="rev()" onmouseout="stop()">B</button>
-    <button onmouseover="left()" onmouseout="stop()">L</button>
-    <button onmouseover="right()" onmouseout="stop()">R</button>
-    <button onmouseover="stop()" onmouseout="stop()">S</button>
+    <canvas id="canvas" width="400" height="400" style="border:solid black 1px;">
+        Your browser does not support canvas element.
+    </canvas>
 
     <script>
-        var isOpen = false;
         var ws = new WebSocket("ws://192.168.0.1:7963");
+        var started = false;
         ws.onopen = function (e) {
-            isOpen = true;
+            var el = document.getElementById("canvas");
+            el.addEventListener("touchstart", handleStart, false);
+            el.addEventListener("touchend", handleEnd, false);
+            el.addEventListener("touchcancel", handleEnd, false);
+            el.addEventListener("touchmove", handleMove, false);
+            el.addEventListener("mousedown", handleStart, false);
+            el.addEventListener("mouseup", handleEnd, false);
+            el.addEventListener("mousemove", handleMove, false);
+
+            var ctx = el.getContext("2d");
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(400, 400);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(400, 0);
+            ctx.lineTo(0, 400);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            send("s");
         }
 
-        function fwd() {
-            ws.send("publish fernando f");
+        var lastSent = '';
+
+        function send(cmd) {
+            if (cmd != lastSent) {
+                ws.send("publish fernando " + cmd);
+                lastSent = cmd;
+            }
         }
 
-        function rev() {
-            ws.send("publish fernando b");
+        function processEvent(evt) {
+            if ("changedTouches" in evt) {
+                var data = evt.changedTouches[0];
+                return {
+                    'x': data.pageX,
+                    'y': data.pageY
+                };
+            } else {
+                return {
+                    'x': evt.offsetX,
+                    'y': evt.offsetY
+                };
+            }
         }
 
-        function left() {
-            ws.send("publish fernando l");
+        function handleStart(evt) {
+            evt.preventDefault();
+            started = true;
+
+            var touch = processEvent(evt);
+            process(touch);
         }
 
-        function right() {
-            ws.send("publish fernando r");
+        function process(touch) {
+            var x = touch.x - 200;
+            var y = touch.y - 200;
+
+            // Rotate 45deg clockwise
+            var angle = 0.785398; // 45 deg in rad
+            x = Math.cos(angle) * x - Math.sin(angle) * y;
+            y = Math.sin(angle) * x + Math.cos(angle) * y;
+
+            // Work out which zone
+            if (x < 0 && y < 0) {
+                send("l");
+            } else if (x < 0 && y > 0) {
+                send("b");
+            } else if (x > 0 && y < 0) {
+                send("f");
+            } else {
+                send("r");
+            }
         }
 
-        function stop() {
-            ws.send("publish fernando s");
+        function handleEnd(evt) {
+            evt.preventDefault();
+            started = false;
+            send("s");
+        }
+
+        function handleMove(evt) {
+            if (!started) {
+                return;
+            }
+
+            evt.preventDefault();
+            var touch = processEvent(evt);
+            process(touch);
         }
     </script>
 </body>
