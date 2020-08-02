@@ -1,1 +1,50 @@
-<h1>Hi</h1>
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>Riker</title>
+    <style>
+    </style>
+</head>
+
+<body>
+
+    <button onmouseover="fwd()" onmouseout="stop()">F</button>
+    <button onmouseover="rev()" onmouseout="stop()">B</button>
+    <button onmouseover="left()" onmouseout="stop()">L</button>
+    <button onmouseover="right()" onmouseout="stop()">R</button>
+    <button onmouseover="stop()" onmouseout="stop()">S</button>
+
+    <script>
+        var isOpen = false;
+        var ws = new WebSocket("ws://192.168.0.1:7963");
+        ws.onopen = function (e) {
+            isOpen = true;
+        }
+
+        function fwd() {
+            ws.send("publish fernando f");
+        }
+
+        function rev() {
+            ws.send("publish fernando b");
+        }
+
+        function left() {
+            ws.send("publish fernando l");
+        }
+
+        function right() {
+            ws.send("publish fernando r");
+        }
+
+        function stop() {
+            ws.send("publish fernando s");
+        }
+    </script>
+</body>
+
+</html>
