@@ -1,0 +1,12 @@
+[Unit]
+Description=Riker - The Commander
+
+[Service]
+ExecStart=/usr/bin/python /home/pi/zoidberg-deploy/riker/riker.py
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+Type=notify
+KillSignal=SIGINT
+
+[Install]
+WantedBy=default.target
